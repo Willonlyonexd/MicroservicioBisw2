@@ -49,8 +49,31 @@ def transformar_para_kpi_stock_minimo():
 
     return df
 
-def transformar_para_kpi_reservas():
-    """Transformación básica para KPI de reservas"""
-    df = transformar_tabla("raw_reserva")
-    df = df[df["estado"].isin([True, False])]
-    return df
+def transformar_para_kpi_reservas_completo():
+    """Carga y transforma datos para los KPIs de reservas"""
+    conn = get_conn_bi()
+
+    # Carga de tablas raw
+    df_reserva = pd.read_sql_query("SELECT * FROM raw_reserva", conn)
+    df_cuenta_mesa = pd.read_sql_query("SELECT * FROM raw_cuenta_mesa", conn)
+    df_venta = pd.read_sql_query("SELECT * FROM raw_venta", conn)
+
+    conn.close()
+
+    # --- Procesamiento de RESERVAS ---
+    df_reserva["fecha_reserva"] = pd.to_datetime(df_reserva["fecha_reserva"], errors="coerce")
+    df_reserva["created_at"] = pd.to_datetime(df_reserva["created_at"], errors="coerce")  # importante para agrupaciones
+    df_reserva["anio"] = df_reserva["fecha_reserva"].dt.year
+    df_reserva["mes"] = df_reserva["fecha_reserva"].dt.month
+    df_reserva["semana"] = df_reserva["fecha_reserva"].dt.isocalendar().week
+    df_reserva["dia"] = df_reserva["fecha_reserva"].dt.day
+    df_reserva["estado"] = df_reserva["estado"].fillna(False).astype(bool)
+
+    # --- Procesamiento de CUENTA MESA ---
+    df_cuenta_mesa["fecha_hora_ini"] = pd.to_datetime(df_cuenta_mesa["fecha_hora_ini"], errors="coerce")
+    df_cuenta_mesa["created_at"] = pd.to_datetime(df_cuenta_mesa["created_at"], errors="coerce")
+
+    # --- Procesamiento de VENTAS ---
+    df_venta["fecha_venta"] = pd.to_datetime(df_venta["fecha_venta"], errors="coerce")
+
+    return df_reserva, df_cuenta_mesa, df_venta
