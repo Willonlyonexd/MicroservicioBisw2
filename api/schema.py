@@ -2,6 +2,7 @@ type_defs = """
     type Query {
         obtenerKPIStockMinimo(tenant_id: Int!): KPIStockMinimo
         obtenerKPIReservas(tenant_id: Int!): KPIReservas
+        obtenerKPIMerma(tenant_id: Int!): KPIMerma
     }
 
     type KPIStockMinimo {
@@ -65,5 +66,39 @@ type_defs = """
         total: Int
         confirmadas: Int
         abandonadas: Int
+    }
+
+    type KPIMerma {
+        porcentaje_merma: Float
+        total_consumido: Float
+        total_mermado: Float
+        top_insumos: [InsumoMerma]
+        por_categoria: [GrupoMerma]
+        por_almacen: [GrupoMerma]
+        por_dia: [GrupoTiempo]
+        por_mes: [GrupoTiempo]
+        motivos_merma: [GrupoMotivo]
+    }
+
+    type InsumoMerma {
+        insumo_id: Int
+        insumo: String
+        cantidad_merma: Float
+    }
+
+    type GrupoMerma {
+        nombre: String
+        porcentaje_merma: Float
+    }
+
+    type GrupoTiempo {
+        fecha: String
+        total_merma: Float
+    }
+
+    type GrupoMotivo {
+        motivo: String
+        cantidad: Float
+        porcentaje: Float
     }
 """

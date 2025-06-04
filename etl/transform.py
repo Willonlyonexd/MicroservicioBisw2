@@ -77,3 +77,41 @@ def transformar_para_kpi_reservas_completo():
     df_venta["fecha_venta"] = pd.to_datetime(df_venta["fecha_venta"], errors="coerce")
 
     return df_reserva, df_cuenta_mesa, df_venta
+
+def transformar_para_kpi_merma():
+    """Carga y transforma datos necesarios para KPIs de merma"""
+    conn = get_conn_bi()
+
+    query = """
+    SELECT
+        m.movimiento_id,
+        m.cantidad,
+        m.motivo,
+        m.tipo_movimiento_id,
+        m.fecha_hora,
+        m.tenant_id,
+        ai.insumo_id,
+        ai.almacen_id,
+        i.nombre AS insumo,
+        i.categoria_id,
+        c.nombre AS categoria,
+        a.nombre AS almacen
+    FROM raw_movimiento_inventario m
+    JOIN raw_almacen_insumo ai ON m.almacen_insumo_id = ai.almaceninsumo_id
+    JOIN raw_insumo i ON ai.insumo_id = i.insumo_id
+    LEFT JOIN raw_categoria c ON i.categoria_id = c.categoria_id AND i.tenant_id = c.tenant_id
+    LEFT JOIN raw_almacen a ON ai.almacen_id = a.almacen_id AND a.tenant_id = i.tenant_id
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+
+    df["categoria"] = df["categoria"].fillna("Sin categoría")
+    df["almacen"] = df["almacen"].fillna("Sin almacén")
+
+    df["fecha_hora"] = pd.to_datetime(df["fecha_hora"], errors="coerce")
+    df["anio"] = df["fecha_hora"].dt.year
+    df["mes"] = df["fecha_hora"].dt.month
+    df["dia"] = df["fecha_hora"].dt.day
+    df["fecha"] = df["fecha_hora"].dt.date
+
+    return df
