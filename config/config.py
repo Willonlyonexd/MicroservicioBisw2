@@ -11,12 +11,13 @@ DB_ERP = {
 
 # Conexión a la base de datos local del microservicio BI (data warehouse)
 DB_BI = {
-    "host": "localhost",
+    "host": "dpg-d12cckh5pdvs73cjrjd0-a.oregon-postgres.render.com",
     "port": 5432,
-    "dbname": "microservicio_zamo",
-    "user": "postgres",
-    "password": "will"
+    "dbname": "erp_bi",
+    "user": "erp_bi_user",
+    "password": "uertnfJpJgYEUfn02w7MSPbyueivAZaW"
 }
+
 
 
 
