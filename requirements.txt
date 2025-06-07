@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+ariadne
+pandas
+psycopg2-binary
+schedule
