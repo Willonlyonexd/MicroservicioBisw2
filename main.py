@@ -5,6 +5,7 @@ import schedule
 import time
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from ariadne.asgi import GraphQL
 from ariadne import make_executable_schema
 
@@ -18,6 +19,16 @@ graphql_app = GraphQL(schema, debug=True)
 
 # Crear instancia FastAPI y montar GraphQL
 app = FastAPI()
+
+# Configurar CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todos los orígenes en desarrollo
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos
+    allow_headers=["*"],  # Permite todos los headers
+)
+
 app.mount("/", graphql_app)
 
 # Función que corre el ETL cada 5 minutos
