@@ -35,7 +35,10 @@ def calcular_kpis_reservas(tenant_id: int):
     df_reserva["nombre_mes"] = df_reserva["mes"].apply(lambda x: calendar.month_name[x])
     df_reserva["dia"] = df_reserva["created_at"].dt.day
     df_reserva["nombre_dia"] = df_reserva["created_at"].dt.day_name()
-    df_reserva["semana_anio"] = df_reserva["created_at"].dt.isocalendar().week
+    df_reserva["semana"] = df_reserva["created_at"].dt.isocalendar().week
+    df_reserva["semana_anio"] = df_reserva["semana"]
+    df_reserva["inicio_semana"] = df_reserva["created_at"] - pd.to_timedelta(df_reserva["created_at"].dt.weekday, unit="d")
+    df_reserva["fin_semana"] = df_reserva["inicio_semana"] + pd.Timedelta(days=6)
 
     # Por Día
     agrupado_dia = df_reserva.groupby("fecha").agg(
@@ -66,19 +69,14 @@ def calcular_kpis_reservas(tenant_id: int):
         for _, row in agrupado_dia.iterrows()
     ]
 
-    # Por Semana
-    df_reserva["semana"] = df_reserva["created_at"].dt.isocalendar().week
-    df_reserva["inicio_semana"] = df_reserva["created_at"] - pd.to_timedelta(df_reserva["created_at"].dt.weekday, unit="d")
-    df_reserva["fin_semana"] = df_reserva["inicio_semana"] + pd.Timedelta(days=6)
-
-    agrupado_semana = df_reserva.groupby("semana").agg(
-        anio=("anio", "first"),
+    # Por Semana (agrupado correctamente por anio + semana)
+    agrupado_semana = df_reserva.groupby(["anio", "semana"]).agg(
         inicio_semana=("inicio_semana", "first"),
         fin_semana=("fin_semana", "first"),
         total=("reserva_id", "count"),
         confirmadas=("estado", lambda x: x.sum()),
         abandonadas=("estado", lambda x: (~x).sum())
-    ).reset_index()
+    ).reset_index().sort_values(by=["anio", "semana"])
 
     reservas_por_semana = [
         {
@@ -93,14 +91,13 @@ def calcular_kpis_reservas(tenant_id: int):
         for _, row in agrupado_semana.iterrows()
     ]
 
-    # Por Mes
-    agrupado_mes = df_reserva.groupby("mes").agg(
-        anio=("anio", "first"),
+    # Por Mes (agrupado correctamente por anio + mes)
+    agrupado_mes = df_reserva.groupby(["anio", "mes"]).agg(
         nombre_mes=("nombre_mes", "first"),
         total=("reserva_id", "count"),
         confirmadas=("estado", lambda x: x.sum()),
         abandonadas=("estado", lambda x: (~x).sum())
-    ).reset_index()
+    ).reset_index().sort_values(by=["anio", "mes"])
 
     reservas_por_mes = [
         {
